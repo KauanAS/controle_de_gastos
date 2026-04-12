@@ -27,7 +27,11 @@ void main() {
       expect(find.byType(TextFormField), findsNWidgets(2)); // email e senha
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Senha'), findsOneWidget);
+      
+      // Botões
       expect(find.text('Entrar'), findsOneWidget);
+      expect(find.text('Entrar com o Google'), findsOneWidget);
+      expect(find.text('Não tem uma conta? Cadastre-se'), findsOneWidget);
     });
 
     testWidgets('deve mostrar mensagem de erro se tentar logar com email vazio', (tester) async {

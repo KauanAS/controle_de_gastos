@@ -18,7 +18,30 @@ class MockAuthService {
     );
     return currentUser;
   }
-  
+
+  Future<User?> signUp(String email, String password) async {
+    if (shouldFail) throw const AuthException('Erro ao criar conta');
+    currentUser = User(
+      id: 'user-2',
+      appMetadata: {},
+      userMetadata: {},
+      aud: 'authenticated',
+      createdAt: DateTime.now().toIso8601String(),
+    );
+    return currentUser;
+  }
+
+  Future<void> signInWithGoogle() async {
+    if (shouldFail) throw const AuthException('Login Google falhou');
+    currentUser = User(
+      id: 'user-google',
+      appMetadata: {},
+      userMetadata: {},
+      aud: 'authenticated',
+      createdAt: DateTime.now().toIso8601String(),
+    );
+  }
+
   Future<void> signOut() async {
     if (shouldFail) throw const AuthException('Erro ao sair');
     currentUser = null;
@@ -106,6 +129,37 @@ void main() {
       final state = notifier.state;
       expect(state.status, AuthStatus.unauthenticated);
       expect(state.user, isNull);
+    });
+  });
+
+  group('AuthNotifier - SignUp / Google', () {
+    test('criar conta altera estado para authenticated e guarda o user', () async {
+      await notifier.signUp('novo@teste.com', 'senha123');
+      
+      final state = notifier.state;
+      expect(state.status, AuthStatus.authenticated);
+      expect(state.user, isNotNull);
+      expect(state.user!.id, 'user-2');
+      expect(state.errorMessage, isNull);
+    });
+
+    test('erro ao criar conta altera para falha', () async {
+      mockAuth.shouldFail = true;
+      await notifier.signUp('errado@teste.com', 'x');
+      
+      final state = notifier.state;
+      expect(state.status, AuthStatus.error);
+      expect(state.user, isNull);
+      expect(state.errorMessage, 'Erro ao criar conta');
+    });
+
+    test('login com o Google altera estado para authenticated', () async {
+      await notifier.signInWithGoogle();
+      
+      final state = notifier.state;
+      expect(state.status, AuthStatus.authenticated);
+      expect(state.user, isNotNull);
+      expect(state.user!.id, 'user-google');
     });
   });
 }

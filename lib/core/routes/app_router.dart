@@ -7,6 +7,7 @@ import 'package:controle_de_gastos/presentation/screens/confirmation/confirmatio
 import 'package:controle_de_gastos/presentation/screens/history/history_screen.dart';
 import 'package:controle_de_gastos/presentation/screens/layout/main_layout.dart';
 import 'package:controle_de_gastos/presentation/screens/auth/login_screen.dart';
+import 'package:controle_de_gastos/presentation/screens/auth/signup_screen.dart';
 import 'package:controle_de_gastos/presentation/screens/splash_screen.dart';
 import 'package:controle_de_gastos/presentation/screens/profile/profile_screen.dart';
 import 'package:controle_de_gastos/domain/entities/expense_entity.dart';
@@ -16,6 +17,7 @@ class AppRoutes {
   AppRoutes._();
   static const String splash = '/';
   static const String login = '/login';
+  static const String signup = '/signup';
   static const String home = '/home';
   static const String history = '/history';
   static const String profile = '/profile';
@@ -33,16 +35,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isSplash = state.matchedLocation == AppRoutes.splash;
       final isLoggingIn = state.matchedLocation == AppRoutes.login;
 
+      final isSigningUp = state.matchedLocation == AppRoutes.signup;
+
       if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
         return null; // Deixa rolar (geralmente splash tela)
       }
 
       if (authState.status == AuthStatus.unauthenticated) {
-        return isLoggingIn ? null : AppRoutes.login;
+        return (isLoggingIn || isSigningUp) ? null : AppRoutes.login;
       }
 
       if (authState.status == AuthStatus.authenticated) {
-        if (isLoggingIn || isSplash) {
+        if (isLoggingIn || isSigningUp || isSplash) {
           return AppRoutes.home;
         }
       }
@@ -57,6 +61,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        builder: (context, state) => const SignupScreen(),
       ),
       // Rotas protegidas (Main Layout)
       StatefulShellRoute.indexedStack(

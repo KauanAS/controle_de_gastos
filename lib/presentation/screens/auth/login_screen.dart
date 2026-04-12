@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:controle_de_gastos/core/routes/app_router.dart';
 import 'package:controle_de_gastos/presentation/notifiers/auth_notifier.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -95,12 +97,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (authState.status == AuthStatus.loading)
                     const Center(child: CircularProgressIndicator())
                   else
-                    ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Entrar', style: TextStyle(fontSize: 16)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _submit,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('Entrar', style: TextStyle(fontSize: 16)),
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            ref.read(authNotifierProvider.notifier).signInWithGoogle();
+                          },
+                          icon: const Icon(Icons.g_mobiledata, size: 28),
+                          label: const Text('Entrar com o Google'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => context.push(AppRoutes.signup),
+                          child: const Text('Não tem uma conta? Cadastre-se'),
+                        ),
+                      ],
                     ),
                 ],
               ),
