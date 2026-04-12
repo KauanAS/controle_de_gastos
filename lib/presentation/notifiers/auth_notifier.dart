@@ -38,12 +38,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._authService) : super(const AuthState()) {
     checkSession();
+    _listenToAuthState();
+  }
+
+  void _listenToAuthState() {
+    if (_authService is GoTrueClient) {
+      _authService.onAuthStateChange.listen((data) {
+        final AuthChangeEvent event = data.event;
+        final Session? session = data.session;
+
+        if (event == AuthChangeEvent.signedIn && session != null) {
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            user: session.user,
+            clearError: true,
+          );
+        } else if (event == AuthChangeEvent.signedOut) {
+          state = state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearUser: true,
+            clearError: true,
+          );
+        }
+      });
+    }
   }
 
   void checkSession() {
     User? user;
     try {
-      // Diferenciar Mock do Serviço Real do Supabase para manter testabilidade simples no Dart
       if (_authService.runtimeType.toString() == 'MockAuthService') {
         user = _authService.currentUser;
       } else if (_authService is GoTrueClient) {
@@ -113,9 +136,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
       } else if (_authService is GoTrueClient) {
         final response = await _authService.signUp(email: email, password: password);
-        // Supabase sign-up might require email confirmation, but we will consider user authenticated
-        // if response.user is not null (this depends on Confirm Email config in Supabase).
-        // Let's keep it simple for the MVP.
         if (response.user != null) {
           state = state.copyWith(
             status: AuthStatus.authenticated,
@@ -148,11 +168,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
            user: _authService.currentUser,
          );
        } else if (_authService is GoTrueClient) {
-         // O redirect para ser capturado precisa the um deeplink configurado (ex: o esquema do myapp://auth-callback)
          await _authService.signInWithOAuth(OAuthProvider.google);
-         // Como signInWithOAuth abre o navegador, o estado retornará apenas "loading".
-         // Quando o redirecionamento ocorrer, o listener de auth do Supabase resolverá a sessão
-         // com a validação em checkSession que faremos pelo deep link.
+         // signInWithOAuth não aguarda o login, ele apenas tenta abrir o navegador de OAuth.
+         // Retornamos ao status anterior para nao travar a tela em "loading" infinitamente
+         // caso o usuario feche e volte pro app manualmente. 
+         // O login vai ser preenchido real pelo AuthStateChange listener que criamos!
+         state = state.copyWith(status: AuthStatus.unauthenticated);
        }
     } on AuthException catch (e) {
       state = state.copyWith(
@@ -162,7 +183,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: 'Erro ao fazer login com o Google: $e',
+        errorMessage: 'Erro ao abrir o Google Login: $e',
       );
     }
   }
