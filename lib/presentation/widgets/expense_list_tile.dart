@@ -117,10 +117,14 @@ class ExpenseListTile extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        _categoryName(expense.category),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          expense.originalText,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -133,10 +137,12 @@ class ExpenseListTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${DateFormatter.formatRelative(expense.dateTime)} · ${_paymentName(expense.paymentMethod)}',
+                    '${_categoryName(expense.category)} · ${DateFormatter.formatRelative(expense.dateTime)} · ${_paymentName(expense.paymentMethod)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
