@@ -91,12 +91,7 @@ class HistoryScreen extends ConsumerWidget {
                               expense.syncStatus == SyncStatus.pending)
                           ? () => notifier.retrySync(expense)
                           : null,
-                      // Swipe para deletar: pede confirmação antes de excluir
-                      onDelete: () => _confirmDelete(
-                        context: context,
-                        expenseId: expense.id,
-                        notifier: notifier,
-                      ),
+                      onDelete: () => notifier.deleteExpense(expense.id),
                     );
                   },
                 ),

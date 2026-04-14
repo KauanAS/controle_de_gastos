@@ -205,8 +205,36 @@ class ExpenseListTile extends StatelessWidget {
             size: 26,
           ),
         ),
-        confirmDismiss: (_) async => true,
-        onDismissed: (_) => onDelete!(),
+        confirmDismiss: (_) async {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text('Excluir lançamento'),
+              content: const Text(
+                'Tem certeza que deseja excluir este lançamento? '
+                'Esta ação não pode ser desfeita.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.error,
+                    foregroundColor: colorScheme.onError,
+                  ),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Excluir'),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) {
+            onDelete!();
+          }
+          return confirmed == true;
+        },
         child: tile,
       );
     }

@@ -22,13 +22,6 @@ class HomeScreen extends ConsumerWidget {
           'Gastos',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history_outlined),
-            tooltip: 'Histórico',
-            onPressed: () => context.push(AppRoutes.history),
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

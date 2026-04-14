@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -15,6 +16,9 @@ import 'package:controle_de_gastos/config/app_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Esconde a barra de navegação do Android e a barra de status, exibindo sob demanda (Immersive mode)
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   // Inicializa locale pt_BR
   await initializeDateFormatting('pt_BR');

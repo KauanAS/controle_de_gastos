@@ -21,6 +21,7 @@ class ExpenseRemoteDataSource {
   Future<RemoteSyncResult> sendExpense(ExpenseModel model) async {
     try {
       final data = {
+        'user_id':        _client.auth.currentUser!.id,
         'id_local':       model.id,
         'data_hora':      model.dateTime.toIso8601String(),
         'categoria':      model.category.name,
