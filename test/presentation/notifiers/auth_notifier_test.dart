@@ -19,7 +19,7 @@ class MockAuthService {
     return currentUser;
   }
 
-  Future<User?> signUp(String email, String password) async {
+  Future<User?> signUp(String name, String email, String password) async {
     if (shouldFail) throw const AuthException('Erro ao criar conta');
     currentUser = User(
       id: 'user-2',
@@ -134,7 +134,7 @@ void main() {
 
   group('AuthNotifier - SignUp / Google', () {
     test('criar conta altera estado para authenticated e guarda o user', () async {
-      await notifier.signUp('novo@teste.com', 'senha123');
+      await notifier.signUp('Teste Nome', 'novo@teste.com', 'senha123');
       
       final state = notifier.state;
       expect(state.status, AuthStatus.authenticated);
@@ -145,7 +145,7 @@ void main() {
 
     test('erro ao criar conta altera para falha', () async {
       mockAuth.shouldFail = true;
-      await notifier.signUp('errado@teste.com', 'x');
+      await notifier.signUp('Nome', 'errado@teste.com', 'x');
       
       final state = notifier.state;
       expect(state.status, AuthStatus.error);

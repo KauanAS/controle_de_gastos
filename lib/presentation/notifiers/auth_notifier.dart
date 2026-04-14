@@ -125,7 +125,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> signUp(String email, String password) async {
+  Future<void> signUp(String name, String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     
     try {
@@ -136,7 +136,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: user,
         );
       } else if (_authService is GoTrueClient) {
-        final response = await _authService.signUp(email: email, password: password);
+        final response = await _authService.signUp(
+          email: email, 
+          password: password,
+          data: {'full_name': name},
+        );
         if (response.user != null) {
           state = state.copyWith(
             status: AuthStatus.authenticated,
@@ -207,6 +211,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
           idToken: idToken,
           accessToken: accessToken,
         );
+
+        // Garante que o nome do google vá para os metadados
+        if (googleUser.displayName != null) {
+          await _authService.updateUser(
+            UserAttributes(data: {'full_name': googleUser.displayName}),
+          );
+        }
 
         state = state.copyWith(
           status: AuthStatus.authenticated,

@@ -230,10 +230,10 @@ class ExpenseListTile extends StatelessWidget {
               ],
             ),
           );
-          if (confirmed == true) {
-            onDelete!();
-          }
           return confirmed == true;
+        },
+        onDismissed: (_) {
+          if (onDelete != null) onDelete!();
         },
         child: tile,
       );

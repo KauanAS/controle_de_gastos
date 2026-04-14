@@ -26,9 +26,10 @@ void main() {
 
       // Verify Texts and fields
       expect(find.text('Criar uma Conta'), findsOneWidget);
+      expect(find.text('Nome Completo'), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Senha'), findsOneWidget);
-      expect(find.byType(TextFormField), findsNWidgets(2));
+      expect(find.byType(TextFormField), findsNWidgets(3));
       
       // Verify buttons
       expect(find.text('Cadastrar'), findsOneWidget);
@@ -53,6 +54,7 @@ void main() {
       await tester.pump();
 
       // Find validation warnings
+      expect(find.text('Informe o seu nome'), findsOneWidget);
       expect(find.text('Informe o seu email'), findsOneWidget);
       expect(find.text('Informe a sua senha'), findsOneWidget);
     });
