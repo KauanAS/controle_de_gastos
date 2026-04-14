@@ -26,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.history_outlined),
             tooltip: 'Histórico',
-            onPressed: () => context.pushNamed(AppRoutes.history),
+            onPressed: () => context.push(AppRoutes.history),
           ),
         ],
       ),
@@ -110,7 +110,7 @@ class HomeScreen extends ConsumerWidget {
 
       // ── FAB: novo lançamento ─────────────────────────────────────────
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.pushNamed(AppRoutes.newEntry),
+        onPressed: () => context.push(AppRoutes.newEntry),
         icon: const Icon(Icons.add),
         label: const Text('Novo gasto'),
       ),

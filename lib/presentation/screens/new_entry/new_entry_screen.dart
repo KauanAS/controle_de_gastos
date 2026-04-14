@@ -91,7 +91,7 @@ class _AITabState extends ConsumerState<_AITab> {
       if (prev?.status != NewEntryStatus.parsed &&
           next.status == NewEntryStatus.parsed &&
           next.parsedExpense != null) {
-        context.pushNamed(
+        context.push(
           AppRoutes.confirmation,
           extra: next.parsedExpense,
         );
@@ -252,7 +252,7 @@ class _ManualTabState extends ConsumerState<_ManualTab> {
       // Manda direto a etapa de confirmacao pois ja é entrada manual
       // Pula o fluxo de IA e apenas confirma
       ref.read(newEntryProvider.notifier).confirmExpense(expense).then((_) {
-         context.goNamed(AppRoutes.home);
+         context.go(AppRoutes.home);
       });
     }
   }

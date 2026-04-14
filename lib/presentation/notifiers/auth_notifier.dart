@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:equatable/equatable.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 enum AuthStatus { initial, unauthenticated, loading, authenticated, error }
 
@@ -158,23 +159,61 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Login nativo com Google usando google_sign_in + Supabase signInWithIdToken.
+  /// Este fluxo funciona em Android/iOS sem abrir navegador externo.
   Future<void> signInWithGoogle() async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     try {
-       if (_authService.runtimeType.toString() == 'MockAuthService') {
-         await _authService.signInWithGoogle();
-         state = state.copyWith(
-           status: AuthStatus.authenticated,
-           user: _authService.currentUser,
-         );
-       } else if (_authService is GoTrueClient) {
-         await _authService.signInWithOAuth(OAuthProvider.google);
-         // signInWithOAuth não aguarda o login, ele apenas tenta abrir o navegador de OAuth.
-         // Retornamos ao status anterior para nao travar a tela em "loading" infinitamente
-         // caso o usuario feche e volte pro app manualmente. 
-         // O login vai ser preenchido real pelo AuthStateChange listener que criamos!
-         state = state.copyWith(status: AuthStatus.unauthenticated);
-       }
+      if (_authService.runtimeType.toString() == 'MockAuthService') {
+        await _authService.signInWithGoogle();
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: _authService.currentUser,
+        );
+        return;
+      }
+
+      if (_authService is GoTrueClient) {
+        // Web Client ID do Google Cloud (o mesmo configurado no Supabase)
+        const webClientId =
+            '102265062478-gi3deor4b81s5p0op90sdi380bu5v80t.apps.googleusercontent.com';
+
+        final googleSignIn = GoogleSignIn(
+          serverClientId: webClientId,
+        );
+
+        final googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          // Usuário cancelou o popup
+          state = state.copyWith(status: AuthStatus.unauthenticated);
+          return;
+        }
+
+        final googleAuth = await googleUser.authentication;
+        final idToken = googleAuth.idToken;
+        final accessToken = googleAuth.accessToken;
+
+        if (idToken == null) {
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: 'Não foi possível obter o token do Google.',
+          );
+          return;
+        }
+
+        // Usa o idToken para logar no Supabase diretamente
+        final response = await _authService.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: response.user,
+          clearError: true,
+        );
+      }
     } on AuthException catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -183,7 +222,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: 'Erro ao abrir o Google Login: $e',
+        errorMessage: 'Erro ao fazer login com o Google: $e',
       );
     }
   }

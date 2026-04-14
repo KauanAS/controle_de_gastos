@@ -60,7 +60,7 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen> {
         // Reset antes de navegar para evitar reentrada
         ref.read(newEntryProvider.notifier).reset();
         // go limpa a pilha inteira e volta para home
-        context.goNamed(AppRoutes.home);
+        context.go(AppRoutes.home);
       }
     });
 
