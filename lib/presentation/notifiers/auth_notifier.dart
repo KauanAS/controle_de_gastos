@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:equatable/equatable.dart';
@@ -54,6 +56,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             user: session.user,
             clearError: true,
           );
+          _ensureProfile(session.user);
         } else if (event == AuthChangeEvent.signedOut) {
           state = state.copyWith(
             status: AuthStatus.unauthenticated,
@@ -62,6 +65,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
           );
         }
       });
+    }
+  }
+
+  /// Garante que exista uma linha em `profiles` para o usuário autenticado.
+  /// Workaround necessário porque o trigger on_auth_user_created do Supabase
+  /// não está ativo — sem isso, o FK `gastos.user_id → profiles.id` falha.
+  Future<void> _ensureProfile(User user) async {
+    if (_authService is! GoTrueClient) return;
+
+    try {
+      final metadata = user.userMetadata ?? const <String, dynamic>{};
+      final provider =
+          (user.appMetadata['provider'] as String?) ?? 'email';
+      final nome = (metadata['full_name'] as String?) ??
+          (metadata['name'] as String?) ??
+          user.email?.split('@').first ??
+          'Usuário';
+      final avatarUrl = (metadata['avatar_url'] as String?) ??
+          (metadata['picture'] as String?);
+
+      await Supabase.instance.client
+          .from('profiles')
+          .upsert(
+            {
+              'id': user.id,
+              'email': user.email,
+              'nome': nome,
+              'avatar_url': avatarUrl,
+              'provider': provider,
+            },
+            onConflict: 'id',
+          )
+          .timeout(const Duration(seconds: 10));
+      debugPrint('[Auth] Profile garantido para ${user.id}');
+    } catch (e) {
+      debugPrint('[Auth] Falha ao garantir profile: $e');
     }
   }
 
@@ -80,6 +119,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: user,
           clearError: true,
         );
+        _ensureProfile(user);
       } else {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
@@ -106,12 +146,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: user,
         );
       } else if (_authService is GoTrueClient) {
-        final response = await _authService.signInWithPassword(email: email, password: password);
+        final response = await _authService
+            .signInWithPassword(email: email, password: password)
+            .timeout(const Duration(seconds: 20));
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: response.user,
         );
       }
+    } on TimeoutException {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'Login demorou demais. Verifica sua internet.',
+      );
     } on AuthException catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
@@ -127,29 +174,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signUp(String name, String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
-    
+
     try {
       if (_authService.runtimeType.toString() == 'MockAuthService') {
-        final user = await _authService.signUp(email, password);
+        final user = await _authService.signUp(name, email, password);
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: user,
         );
       } else if (_authService is GoTrueClient) {
-        final response = await _authService.signUp(
-          email: email, 
-          password: password,
-          data: {'full_name': name},
-        );
-        if (response.user != null) {
+        final response = await _authService
+            .signUp(
+              email: email,
+              password: password,
+              data: {'full_name': name},
+            )
+            .timeout(const Duration(seconds: 20));
+
+        if (response.user != null && response.session != null) {
+          // Cadastro + login automático (email confirmation desativada)
           state = state.copyWith(
             status: AuthStatus.authenticated,
             user: response.user,
           );
+        } else if (response.user != null) {
+          // Conta criada, mas precisa confirmar email antes de logar
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage:
+                'Conta criada! Confirme seu email e depois entre pela tela de login.',
+          );
         } else {
-          state = state.copyWith(status: AuthStatus.unauthenticated);
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: 'Cadastro não retornou usuário. Tenta novamente.',
+          );
         }
       }
+    } on TimeoutException {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage:
+            'Cadastro demorou demais. Verifica sua internet ou o banco.',
+      );
     } on AuthException catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,

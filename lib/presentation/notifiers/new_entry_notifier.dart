@@ -98,9 +98,11 @@ class NewEntryNotifier extends StateNotifier<NewEntryState> {
     _ref.invalidate(currentMonthExpensesProvider);
     _ref.invalidate(monthlySummaryProvider);
 
-    state = state.copyWith(
+    state = NewEntryState(
       status: NewEntryStatus.success,
+      parsedExpense: state.parsedExpense,
       syncSuccess: syncResult.success,
+      errorMessage: syncResult.success ? null : syncResult.errorMessage,
     );
   }
 

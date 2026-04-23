@@ -31,7 +31,7 @@ class ProfileScreen extends ConsumerWidget {
             // Nome do usuário
             profileAsync.when(
               data: (profile) => Text(
-                profile?['full_name'] ?? 'Usuário',
+                profile?['full_name'] ?? user?.userMetadata?['full_name'] ?? 'Usuário',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -45,7 +45,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => Text(
-                'Usuário',
+                user?.userMetadata?['full_name'] ?? 'Usuário',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleLarge,
               ),

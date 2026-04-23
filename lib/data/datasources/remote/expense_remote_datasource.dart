@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:controle_de_gastos/domain/models/expense_model.dart';
 
@@ -43,11 +44,14 @@ class ExpenseRemoteDataSource {
         remoteId: response['id']?.toString(),
       );
     } on PostgrestException catch (e) {
+      debugPrint('[Supabase] PostgrestException no INSERT gastos: '
+          'code=${e.code} message=${e.message} details=${e.details} hint=${e.hint}');
       return RemoteSyncResult(
         success: false,
         errorMessage: 'Erro no banco: ${e.message}',
       );
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[Supabase] Erro inesperado no INSERT gastos: $e\n$stack');
       return RemoteSyncResult(
         success: false,
         errorMessage: 'Erro ao conectar: $e',

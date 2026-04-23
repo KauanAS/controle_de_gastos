@@ -12,6 +12,8 @@ import 'package:controle_de_gastos/domain/models/expense_model.dart';
 import 'package:controle_de_gastos/domain/enums/sync_status_enum.dart';
 import 'package:controle_de_gastos/domain/enums/category_enum.dart';
 import 'package:controle_de_gastos/domain/enums/payment_method_enum.dart';
+import 'package:controle_de_gastos/domain/enums/income_category_enum.dart';
+import 'package:controle_de_gastos/data/models/income_model.dart';
 import 'package:controle_de_gastos/config/app_config.dart';
 
 Future<void> main() async {
@@ -35,7 +37,10 @@ Future<void> main() async {
   Hive.registerAdapter(CategoryEnumAdapter());
   Hive.registerAdapter(PaymentMethodAdapter());
   Hive.registerAdapter(ExpenseModelAdapter());
+  Hive.registerAdapter(IncomeCategoryEnumAdapter());
+  Hive.registerAdapter(IncomeModelAdapter());
   await Hive.openBox<ExpenseModel>(AppConstants.hiveBoxExpenses);
+  await Hive.openBox<IncomeModel>('incomes_box');
 
   runApp(
     const ProviderScope(

@@ -82,9 +82,12 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<bool> syncToRemote(ExpenseEntity expense) async {
+  Future<({bool success, String? errorMessage})> syncToRemote(
+      ExpenseEntity expense) async {
     if (shouldFail) throw Exception(failMessage);
-    if (syncShouldFail) return false;
+    if (syncShouldFail) {
+      return (success: false, errorMessage: 'Falha simulada de sync');
+    }
     final index = _storage.indexWhere((e) => e.id == expense.id);
     if (index != -1) {
       _storage[index] = expense.copyWith(
@@ -92,7 +95,7 @@ class MockExpenseRepository implements ExpenseRepository {
         remoteId: 'remote-${expense.id}',
       );
     }
-    return true;
+    return (success: true, errorMessage: null);
   }
 
   @override

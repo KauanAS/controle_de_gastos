@@ -45,15 +45,24 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen> {
     ref.listen(newEntryProvider, (prev, next) {
       if (prev?.status != NewEntryStatus.success &&
           next.status == NewEntryStatus.success) {
-        final syncMsg = next.syncSuccess
-            ? 'Sincronizado com sucesso!'
-            : 'Salvo localmente. Sincronização pendente.';
+        final String message;
+        final Color bg;
+        if (next.syncSuccess) {
+          message = 'Lançamento salvo. Sincronizado com sucesso!';
+          bg = colorScheme.primary;
+        } else if (next.errorMessage != null) {
+          message = 'Salvo localmente. Falha ao enviar: ${next.errorMessage}';
+          bg = colorScheme.error;
+        } else {
+          message = 'Salvo localmente. Sincronização pendente.';
+          bg = Colors.orange;
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lançamento salvo. $syncMsg'),
-            backgroundColor:
-                next.syncSuccess ? colorScheme.primary : Colors.orange,
+            content: Text(message),
+            backgroundColor: bg,
+            duration: const Duration(seconds: 6),
           ),
         );
 

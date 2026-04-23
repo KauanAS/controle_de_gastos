@@ -9,7 +9,8 @@ abstract class ExpenseRepository {
   Future<List<ExpenseEntity>> getByMonth(int year, int month);
   Future<List<ExpenseEntity>> getByCategory(CategoryEnum category);
   Future<List<ExpenseEntity>> getPendingSync();
-  Future<bool> syncToRemote(ExpenseEntity expense);
+  Future<({bool success, String? errorMessage})> syncToRemote(
+      ExpenseEntity expense);
 
   /// Remove apenas do armazenamento local (Hive).
   Future<void> deleteLocal(String id);

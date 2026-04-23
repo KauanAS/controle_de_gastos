@@ -80,6 +80,36 @@ class ExpenseListTile extends StatelessWidget {
     }
   }
 
+  void _showDeleteDialog(BuildContext context, ColorScheme colorScheme) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir lançamento'),
+        content: const Text(
+          'Tem certeza que deseja excluir este lançamento? '
+          'Esta ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && onDelete != null) {
+      onDelete!();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -87,158 +117,107 @@ class ExpenseListTile extends StatelessWidget {
     final canRetry = expense.syncStatus == SyncStatus.failed ||
         expense.syncStatus == SyncStatus.pending;
 
-    final tile = Card(
+    return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            // Ícone da categoria
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Text(
-                  _categoryIcon(expense.category),
-                  style: const TextStyle(fontSize: 22),
+      clipBehavior: Clip.hardEdge,
+      child: InkWell(
+        onLongPress: onDelete != null ? () => _showDeleteDialog(context, colorScheme) : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // Ícone da categoria
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    _categoryIcon(expense.category),
+                    style: const TextStyle(fontSize: 22),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-            // Categoria + data + pagamento
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          expense.originalText,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+              // Categoria + data + pagamento
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            expense.originalText,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          _syncIcon(expense.syncStatus),
+                          size: 14,
+                          color: _syncColor(expense.syncStatus),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${_categoryName(expense.category)} · ${DateFormatter.formatRelative(expense.dateTime)} · ${_paymentName(expense.paymentMethod)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Valor + botão retry
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    CurrencyFormatter.format(expense.amount),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  if (canRetry && onRetrySync != null) ...[
+                    const SizedBox(height: 4),
+                    if (isRetrying)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: onRetrySync,
+                        child: Text(
+                          'Reenviar',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Icon(
-                        _syncIcon(expense.syncStatus),
-                        size: 14,
-                        color: _syncColor(expense.syncStatus),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${_categoryName(expense.category)} · ${DateFormatter.formatRelative(expense.dateTime)} · ${_paymentName(expense.paymentMethod)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ],
               ),
-            ),
-
-            // Valor + botão retry
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  CurrencyFormatter.format(expense.amount),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                if (canRetry && onRetrySync != null) ...[
-                  const SizedBox(height: 4),
-                  if (isRetrying)
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    GestureDetector(
-                      onTap: onRetrySync,
-                      child: Text(
-                        'Reenviar',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
-
-    // Swipe para deletar (só aparece quando onDelete é fornecido)
-    if (onDelete != null) {
-      return Dismissible(
-        key: ValueKey(expense.id),
-        direction: DismissDirection.endToStart,
-        background: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: colorScheme.errorContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          child: Icon(
-            Icons.delete_outline,
-            color: colorScheme.onErrorContainer,
-            size: 26,
-          ),
-        ),
-        confirmDismiss: (_) async {
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: const Text('Excluir lançamento'),
-              content: const Text(
-                'Tem certeza que deseja excluir este lançamento? '
-                'Esta ação não pode ser desfeita.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar'),
-                ),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.error,
-                    foregroundColor: colorScheme.onError,
-                  ),
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Excluir'),
-                ),
-              ],
-            ),
-          );
-          return confirmed == true;
-        },
-        onDismissed: (_) {
-          if (onDelete != null) onDelete!();
-        },
-        child: tile,
-      );
-    }
-
-    return tile;
   }
 }

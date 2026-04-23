@@ -52,9 +52,12 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
-  Future<bool> syncToRemote(ExpenseEntity expense) async {
+  Future<({bool success, String? errorMessage})> syncToRemote(
+      ExpenseEntity expense) async {
     final model = _local.getById(expense.id);
-    if (model == null) return false;
+    if (model == null) {
+      return (success: false, errorMessage: 'Gasto não encontrado localmente');
+    }
 
     final result = await _remote.sendExpense(model);
 
@@ -66,7 +69,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     );
     await _local.update(model);
 
-    return result.success;
+    return (success: result.success, errorMessage: result.errorMessage);
   }
 
   @override

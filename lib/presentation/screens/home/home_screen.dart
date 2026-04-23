@@ -101,11 +101,35 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
 
-      // ── FAB: novo lançamento ─────────────────────────────────────────
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.newEntry),
-        icon: const Icon(Icons.add),
-        label: const Text('Novo gasto'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) => SafeArea(
+              child: Wrap(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.money_off, color: Colors.red),
+                    title: const Text('Novo Gasto'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push(AppRoutes.newEntry);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.attach_money, color: Colors.green),
+                    title: const Text('Nova Receita'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push(AppRoutes.newIncome);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

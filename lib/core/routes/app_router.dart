@@ -10,6 +10,7 @@ import 'package:controle_de_gastos/presentation/screens/auth/login_screen.dart';
 import 'package:controle_de_gastos/presentation/screens/auth/signup_screen.dart';
 import 'package:controle_de_gastos/presentation/screens/splash_screen.dart';
 import 'package:controle_de_gastos/presentation/screens/profile/profile_screen.dart';
+import 'package:controle_de_gastos/presentation/screens/new_income/new_income_screen.dart';
 import 'package:controle_de_gastos/domain/entities/expense_entity.dart';
 import 'package:controle_de_gastos/presentation/notifiers/auth_notifier.dart';
 
@@ -22,6 +23,7 @@ class AppRoutes {
   static const String history = '/history';
   static const String profile = '/profile';
   static const String newEntry = '/new-entry';
+  static const String newIncome = '/new-income';
   static const String confirmation = '/confirmation';
 }
 
@@ -106,6 +108,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.newEntry,
         name: 'newEntry',
         builder: (context, state) => const NewEntryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.newIncome,
+        name: 'newIncome',
+        builder: (context, state) => const NewIncomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.confirmation,

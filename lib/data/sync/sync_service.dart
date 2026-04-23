@@ -23,8 +23,11 @@ class SyncService {
   /// Atualiza o status local com o resultado.
   Future<SyncOperationResult> syncOne(ExpenseEntity expense) async {
     try {
-      final success = await _repository.syncToRemote(expense);
-      return SyncOperationResult(success: success);
+      final result = await _repository.syncToRemote(expense);
+      return SyncOperationResult(
+        success: result.success,
+        errorMessage: result.errorMessage,
+      );
     } catch (e) {
       return SyncOperationResult(
         success: false,

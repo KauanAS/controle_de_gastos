@@ -223,18 +223,18 @@ void main() {
       );
       await repository.saveLocal(entity);
 
-      final success = await repository.syncToRemote(entity);
+      final result = await repository.syncToRemote(entity);
 
-      expect(success, isTrue);
+      expect(result.success, isTrue);
       expect(mockRemote.sentExpenses, hasLength(1));
     });
 
     test('deve retornar false se expense não existe localmente', () async {
       final entity = TestHelpers.createExpenseEntity(id: 'inexistente');
 
-      final success = await repository.syncToRemote(entity);
+      final result = await repository.syncToRemote(entity);
 
-      expect(success, isFalse);
+      expect(result.success, isFalse);
     });
 
     test('deve retornar false se remote falhar', () async {
@@ -242,9 +242,9 @@ void main() {
       final entity = TestHelpers.createExpenseEntity(id: 'sync-fail');
       await repository.saveLocal(entity);
 
-      final success = await repository.syncToRemote(entity);
+      final result = await repository.syncToRemote(entity);
 
-      expect(success, isFalse);
+      expect(result.success, isFalse);
     });
 
     test('deve atualizar model com resultado do sync', () async {
